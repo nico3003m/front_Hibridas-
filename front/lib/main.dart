@@ -53,6 +53,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
           'celular': celularController.text.trim(),
           'correo': correoController.text.trim(),
           'direccion': direccionController.text.trim(),
+
         }),
       );
 
@@ -95,8 +96,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
                   validator: (value) {
                     if (value == null || value.isEmpty)
                       return 'Campo requerido';
-                    if (value.length < 6)
-                      return 'Debe tener al menos 6 caracteres';
+                    if (value.length < 8)
+                      return 'Debe tener al menos 8 caracteres';
                     return null;
                   },
                 ),
