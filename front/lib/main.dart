@@ -52,7 +52,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
           'nombre': nombreController.text.trim(),
           'celular': celularController.text.trim(),
           'correo': correoController.text.trim(),
-          'correo': direccionController.text.trim(),
+          'direccion': direccionController.text.trim(),
         }),
       );
 
