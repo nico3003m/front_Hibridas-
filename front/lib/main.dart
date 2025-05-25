@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:front/login.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 
@@ -43,25 +44,29 @@ class _RegisterScreenState extends State<RegisterScreen> {
   // Función para registrar al usuario
   void register() async {
     if (_formKey.currentState!.validate()) {
+      //El correo se deja en miniscula para que el backend no tenga problema
       final response = await http.post(
-        Uri.parse('http://192.168.101.5:5000/api/auth/register'),
+        Uri.parse('http://192.168.20.30:5000/api/register'),
         headers: {'Content-Type': 'application/json'},
         body: jsonEncode({
           'username': userController.text.trim(),
           'password': passController.text.trim(),
           'nombre': nombreController.text.trim(),
           'celular': celularController.text.trim(),
-          'correo': correoController.text.trim(),
+          'correo': correoController.text.trim().toLowerCase(),
           'direccion': direccionController.text.trim(),
-
         }),
       );
 
-      if (response.statusCode == 200) {
-        showMessage("✅ Usuario registrado correctamente");
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        showMessage("✅ Usuario registrado correctamente  ");
         Navigator.pop(context);
+        Navigator.push(
+          context,
+          MaterialPageRoute(builder: (context) => loging()),
+        );
       } else {
-        showMessage("❌ Error al registrar usuario");
+        showMessage("❌ Error al registrar usuario  ");
       }
     }
   }
@@ -139,9 +144,11 @@ class _RegisterScreenState extends State<RegisterScreen> {
                 // Direccion
                 TextFormField(
                   controller: direccionController,
-                  decoration: InputDecoration(labelText: 'direccion de domicilio'),
+                  decoration: InputDecoration(
+                    labelText: 'direccion de domicilio',
+                  ),
                   keyboardType: TextInputType.emailAddress,
-                 validator:
+                  validator:
                       (value) =>
                           value == null || value.isEmpty
                               ? 'Campo requerido'
@@ -150,6 +157,22 @@ class _RegisterScreenState extends State<RegisterScreen> {
                 SizedBox(height: 20),
                 // Botón de registro
                 ElevatedButton(onPressed: register, child: Text('Registrar')),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Text("¿Ya tiene cuenta?"),
+                    TextButton(
+                      onPressed: () {
+                        // Aquí navegas a la pantalla de inicio de sesión
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(builder: (context) => loging()),
+                        ); // o usa MaterialPageRoute
+                      },
+                      child: Text('Inicie sesión'),
+                    ),
+                  ],
+                ),
               ],
             ),
           ),
