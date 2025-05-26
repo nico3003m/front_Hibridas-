@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:front/main.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 
@@ -12,7 +13,7 @@ class loging extends StatelessWidget {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
       title: 'login App',
-      home: RegisterScreen(), // Asegúrate que esta sea la pantalla inicial
+      home: RegisterScreen(),
     );
   }
 }
@@ -25,7 +26,6 @@ class RegisterScreen extends StatefulWidget {
 class _RegisterScreenState extends State<RegisterScreen> {
   final _formKey = GlobalKey<FormState>();
 
-  // Controladores para los campos de texto
   final TextEditingController userController = TextEditingController();
   final TextEditingController passController = TextEditingController();
   final TextEditingController nombreController = TextEditingController();
@@ -33,14 +33,12 @@ class _RegisterScreenState extends State<RegisterScreen> {
   final TextEditingController correoController = TextEditingController();
   final TextEditingController direccionController = TextEditingController();
 
-  // Mostrar mensajes tipo SnackBar
   void showMessage(String mensaje) {
     ScaffoldMessenger.of(
       context,
     ).showSnackBar(SnackBar(content: Text(mensaje)));
   }
 
-  // Función para registrar al usuario
   void register() async {
     if (_formKey.currentState!.validate()) {
       final response = await http.post(
@@ -61,19 +59,17 @@ class _RegisterScreenState extends State<RegisterScreen> {
     }
   }
 
-  // Interfaz gráfica
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text('Login')),
+      appBar: AppBar(title: Text('Iniciar Sesión')),
       body: Padding(
         padding: const EdgeInsets.all(20.0),
         child: Form(
-          key: _formKey, // Llave para validar el formulario
+          key: _formKey,
           child: SingleChildScrollView(
             child: Column(
               children: [
-                // Correo electrónico
                 TextFormField(
                   controller: correoController,
                   decoration: InputDecoration(labelText: 'Correo electrónico'),
@@ -85,7 +81,6 @@ class _RegisterScreenState extends State<RegisterScreen> {
                     return null;
                   },
                 ),
-                // Contraseña
                 TextFormField(
                   controller: passController,
                   decoration: InputDecoration(labelText: 'Contraseña'),
@@ -99,15 +94,45 @@ class _RegisterScreenState extends State<RegisterScreen> {
                   },
                 ),
                 SizedBox(height: 20),
-                // Botón de registro
                 ElevatedButton(
                   onPressed: register,
                   child: Text('Iniciar Sesion'),
+                ),
+                SizedBox(height: 20),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Text("¿No tienes cuenta?"),
+                    TextButton(
+                      onPressed: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => MyApp(), // REEMPLAZA si usas otra pantalla
+                          ),
+                        );
+                      },
+                      child: Text('Regístrate'),
+                    ),
+                  ],
                 ),
               ],
             ),
           ),
         ),
+      ),
+    );
+  }
+}
+
+// Pantalla de ejemplo para navegación (puedes cambiar el contenido)
+class MainScreen extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(title: Text('Pantalla de Registro')),
+      body: Center(
+        child: Text('Aquí iría la pantalla para registrar usuarios.'),
       ),
     );
   }
