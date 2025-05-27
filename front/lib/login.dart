@@ -1,31 +1,35 @@
-import 'package:flutter/material.dart';
-import 'package:front/main.dart';
-import 'package:http/http.dart' as http;
-import 'dart:convert';
+import 'package:flutter/material.dart'; // Widgets de Flutter
+import 'package:front/main.dart'; // Tu archivo principal (puedes modificar según organización)
+import 'package:front/home.dart'; // Pantalla Home después del login
+import 'package:http/http.dart' as http; // Para peticiones HTTP
+import 'dart:convert'; // Para convertir JSON
 
 void main() {
-  runApp(loging());
+  runApp(loging()); // Ejecuta la clase `loging` al iniciar
 }
+
 
 class loging extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      debugShowCheckedModeBanner: false,
+      debugShowCheckedModeBanner: false, // Oculta el banner de debug
       title: 'login App',
-      home: RegisterScreen(),
+      home: RegisterScreen(), // Muestra la pantalla de inicio de sesión
     );
   }
 }
 
+
 class RegisterScreen extends StatefulWidget {
   @override
-  _RegisterScreenState createState() => _RegisterScreenState();
+  _RegisterScreenState createState() => _RegisterScreenState(); // Estado del formulario
 }
 
 class _RegisterScreenState extends State<RegisterScreen> {
-  final _formKey = GlobalKey<FormState>();
+  final _formKey = GlobalKey<FormState>(); // Clave para validar formulario
 
+  // Controladores para campos del formulario
   final TextEditingController userController = TextEditingController();
   final TextEditingController passController = TextEditingController();
   final TextEditingController nombreController = TextEditingController();
@@ -34,27 +38,27 @@ class _RegisterScreenState extends State<RegisterScreen> {
   final TextEditingController direccionController = TextEditingController();
 
   void showMessage(String mensaje) {
-    ScaffoldMessenger.of(
-      context,
-    ).showSnackBar(SnackBar(content: Text(mensaje)));
+    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(mensaje)));
   }
+
 
   void register() async {
     if (_formKey.currentState!.validate()) {
       final response = await http.post(
-        Uri.parse('http://192.168.20.30:5000/api/login'),
+        Uri.parse('http://192.168.20.30:5000/api/login'), // URL API .NET
         headers: {'Content-Type': 'application/json'},
         body: jsonEncode({
-          'password': passController.text.trim(),
-          'correo': correoController.text.trim().toLowerCase(),
+          'password': passController.text.trim(), // Envia contraseña
+          'correo': correoController.text.trim().toLowerCase(), // Envia correo
         }),
       );
 
+      // Si el login fue exitoso
       if (response.statusCode == 200 || response.statusCode == 201) {
-        showMessage("✅ Usuario ingreso correctamente  ");
-        Navigator.pop(context);
+        showMessage("✅ Usuario ingresó correctamente");
+        Navigator.pop(context); // Vuelve atrás (puedes reemplazar por navegar a HomeScreen)
       } else {
-        showMessage("❌ Error al ingresar credenciales invalidas  ");
+        showMessage("❌ Error: Credenciales inválidas");
       }
     }
   }
@@ -70,6 +74,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
           child: SingleChildScrollView(
             child: Column(
               children: [
+                // Campo correo
                 TextFormField(
                   controller: correoController,
                   decoration: InputDecoration(labelText: 'Correo electrónico'),
@@ -81,6 +86,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
                     return null;
                   },
                 ),
+
+                // Campo contraseña
                 TextFormField(
                   controller: passController,
                   decoration: InputDecoration(labelText: 'Contraseña'),
@@ -93,12 +100,31 @@ class _RegisterScreenState extends State<RegisterScreen> {
                     return null;
                   },
                 ),
+
                 SizedBox(height: 20),
+
+                // Botón para iniciar sesión
                 ElevatedButton(
                   onPressed: register,
-                  child: Text('Iniciar Sesion'),
+                  child: Text('Iniciar Sesión'),
                 ),
+
+                // Botón para ver lista de usuarios
+                ElevatedButton(
+                  onPressed: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => ListaUsuariosScreen(), // Ir a lista
+                      ),
+                    );
+                  },
+                  child: Text('Ver usuarios registrados'),
+                ),
+
                 SizedBox(height: 20),
+
+                // Opción para registrarse
                 Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
@@ -108,7 +134,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                         Navigator.push(
                           context,
                           MaterialPageRoute(
-                            builder: (context) => MyApp(), // REEMPLAZA si usas otra pantalla
+                            builder: (context) => MyApp(), // Ir a pantalla de registro
                           ),
                         );
                       },
@@ -125,7 +151,6 @@ class _RegisterScreenState extends State<RegisterScreen> {
   }
 }
 
-// Pantalla de ejemplo para navegación (puedes cambiar el contenido)
 class MainScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
@@ -137,3 +162,4 @@ class MainScreen extends StatelessWidget {
     );
   }
 }
+
