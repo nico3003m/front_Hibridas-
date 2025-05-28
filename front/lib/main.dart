@@ -46,7 +46,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
     if (_formKey.currentState!.validate()) {
       //El correo se deja en miniscula para que el backend no tenga problema
       final response = await http.post(
-        Uri.parse('http://192.168.20.30:5000/api/register'),
+        Uri.parse('http://192.168.20.56:5220/api/auth/register'),
         headers: {'Content-Type': 'application/json'},
         body: jsonEncode({
           'username': userController.text.trim(),

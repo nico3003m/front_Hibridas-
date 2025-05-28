@@ -3,11 +3,11 @@ import 'package:front/main.dart'; // Tu archivo principal (puedes modificar seg�
 import 'package:front/home.dart'; // Pantalla Home después del login
 import 'package:http/http.dart' as http; // Para peticiones HTTP
 import 'dart:convert'; // Para convertir JSON
+import 'package:front/userId.dart';
 
 void main() {
   runApp(loging()); // Ejecuta la clase `loging` al iniciar
 }
-
 
 class loging extends StatelessWidget {
   @override
@@ -19,7 +19,6 @@ class loging extends StatelessWidget {
     );
   }
 }
-
 
 class RegisterScreen extends StatefulWidget {
   @override
@@ -38,25 +37,35 @@ class _RegisterScreenState extends State<RegisterScreen> {
   final TextEditingController direccionController = TextEditingController();
 
   void showMessage(String mensaje) {
-    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(mensaje)));
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(SnackBar(content: Text(mensaje)));
   }
-
 
   void register() async {
     if (_formKey.currentState!.validate()) {
       final response = await http.post(
-        Uri.parse('http://192.168.20.30:5000/api/login'), // URL API .NET
+        Uri.parse('http://192.168.20.56:5220/api/auth/login'), // URL API .NET
         headers: {'Content-Type': 'application/json'},
         body: jsonEncode({
-          'password': passController.text.trim(), // Envia contraseña
           'correo': correoController.text.trim().toLowerCase(), // Envia correo
+          'password': passController.text.trim(), // Envia contraseña
         }),
       );
 
       // Si el login fue exitoso
       if (response.statusCode == 200 || response.statusCode == 201) {
         showMessage("✅ Usuario ingresó correctamente");
-        Navigator.pop(context); // Vuelve atrás (puedes reemplazar por navegar a HomeScreen)
+        final data = jsonDecode(response.body);
+        final int userId = data['id']; // Asegúrate que el campo se llama 'id'
+
+        // Guarda el ID en el objeto UsuarioSesion
+        final sesion = UsuarioSesion();
+        await sesion.guardar(userId);
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (context) => ListaUsuariosScreen()),
+        );
       } else {
         showMessage("❌ Error: Credenciales inválidas");
       }
@@ -115,7 +124,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
                     Navigator.push(
                       context,
                       MaterialPageRoute(
-                        builder: (context) => ListaUsuariosScreen(), // Ir a lista
+                        builder:
+                            (context) => ListaUsuariosScreen(), // Ir a lista
                       ),
                     );
                   },
@@ -134,7 +144,9 @@ class _RegisterScreenState extends State<RegisterScreen> {
                         Navigator.push(
                           context,
                           MaterialPageRoute(
-                            builder: (context) => MyApp(), // Ir a pantalla de registro
+                            builder:
+                                (context) =>
+                                    MyApp(), // Ir a pantalla de registro
                           ),
                         );
                       },
@@ -162,4 +174,3 @@ class MainScreen extends StatelessWidget {
     );
   }
 }
-
