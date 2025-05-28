@@ -1,11 +1,9 @@
-// Importa los paquetes necesarios para crear la interfaz y hacer peticiones HTTP
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 
-import 'usuario.dart'; // Importa el modelo Usuario (debe estar definido en otro archivo)
+import 'usuario.dart'; // Modelo de Usuario
 
-// Pantalla que mostrará la lista completa de usuarios
 class ListaUsuariosScreen extends StatefulWidget {
   const ListaUsuariosScreen({Key? key}) : super(key: key);
 
@@ -13,76 +11,198 @@ class ListaUsuariosScreen extends StatefulWidget {
   State<ListaUsuariosScreen> createState() => _ListaUsuariosScreenState();
 }
 
-// Estado de la pantalla que se encarga de cargar y mostrar los usuarios
 class _ListaUsuariosScreenState extends State<ListaUsuariosScreen> {
-  // Variable que guardará la lista de usuarios cargados desde la API
   late Future<List<Usuario>> _usuarios;
 
-  // initState se ejecuta cuando se abre la pantalla por primera vez
   @override
   void initState() {
     super.initState();
-    // Cargar los usuarios al iniciar la pantalla
     _usuarios = obtenerUsuarios();
   }
 
-  // Función que realiza la petición HTTP GET a la API para obtener los usuarios
   Future<List<Usuario>> obtenerUsuarios() async {
     final response = await http.get(
-      Uri.parse('http://192.168.20.30:5000/api/usuarios'), // URL del backend .NET
+      Uri.parse('http://localhost:5220/api/cliente'),
     );
 
-    // Si la respuesta fue exitosa (código 200)
     if (response.statusCode == 200) {
-      final List<dynamic> listaJson = json.decode(response.body); // Convierte el JSON
-      // Transforma cada JSON en un objeto Usuario y devuelve la lista
+      final List<dynamic> listaJson = json.decode(response.body);
       return listaJson.map((json) => Usuario.fromJson(json)).toList();
     } else {
-      // Si hubo error, lanza una excepción
       throw Exception('Error al cargar usuarios');
     }
   }
 
-  // Método que construye la interfaz de la pantalla
+  Future<void> eliminarUsuario(int id) async {
+    final response = await http.delete(
+      Uri.parse('http://localhost:5220/api/cliente/$id'),
+    );
+
+    if (response.statusCode == 200) {
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text("✅ Usuario eliminado")));
+      setState(() {
+        _usuarios = obtenerUsuarios(); // Recargar lista
+      });
+    } else {
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text("❌ Error al eliminar usuario")));
+    }
+  }
+
+  void mostrarDialogoEditar(Usuario usuario) {
+    final nombreCtrl = TextEditingController(text: usuario.nombre);
+    final correoCtrl = TextEditingController(text: usuario.correo);
+    final direccionCtrl = TextEditingController(text: usuario.direccion);
+    final telefonoCtrl = TextEditingController(text: usuario.telefono);
+
+    showDialog(
+      context: context,
+      builder:
+          (context) => AlertDialog(
+            title: Text("Editar usuario"),
+            content: SingleChildScrollView(
+              child: Column(
+                children: [
+                  TextField(
+                    controller: nombreCtrl,
+                    decoration: InputDecoration(labelText: "Nombre"),
+                  ),
+                  TextField(
+                    controller: correoCtrl,
+                    decoration: InputDecoration(labelText: "Correo"),
+                  ),
+                  TextField(
+                    controller: direccionCtrl,
+                    decoration: InputDecoration(labelText: "Dirección"),
+                  ),
+                  TextField(
+                    controller: telefonoCtrl,
+                    decoration: InputDecoration(labelText: "Teléfono"),
+                  ),
+                ],
+              ),
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(context),
+                child: Text("Cancelar"),
+              ),
+              ElevatedButton(
+                onPressed: () async {
+                  final response = await http.put(
+                    Uri.parse(
+                      'http://localhost:5220/api/cliente/${usuario.id}',
+                    ),
+                    headers: {'Content-Type': 'application/json'},
+                    body: jsonEncode({
+                      'id': usuario.id,
+                      'nombre': nombreCtrl.text,
+                      'correo': correoCtrl.text,
+                      'direccion': direccionCtrl.text,
+                      'telefono': telefonoCtrl.text,
+                    }),
+                  );
+
+                  Navigator.pop(context);
+
+                  if (response.statusCode == 200) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(content: Text("✅ Usuario actualizado")),
+                    );
+                    setState(() {
+                      _usuarios = obtenerUsuarios();
+                    });
+                  } else {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(content: Text("❌ Error al actualizar")),
+                    );
+                  }
+                },
+                child: Text("Guardar"),
+              ),
+            ],
+          ),
+    );
+  }
+
+  void mostrarDetalles(Usuario usuario) {
+    showDialog(
+      context: context,
+      builder:
+          (context) => AlertDialog(
+            title: Text("Detalles del usuario"),
+            content: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text("Nombre: ${usuario.nombre}"),
+                Text("Correo: ${usuario.correo}"),
+                Text("Dirección: ${usuario.direccion}"),
+                Text("Teléfono: ${usuario.telefono}"),
+              ],
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(context),
+                child: Text("Cerrar"),
+              ),
+            ],
+          ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text('Lista de clientes')), // Título de la app
-      body: FutureBuilder<List<Usuario>>( // Widget que espera los datos futuros (_usuarios)
+      appBar: AppBar(title: Text('Lista de clientes')),
+      body: FutureBuilder<List<Usuario>>(
         future: _usuarios,
         builder: (context, snapshot) {
-          // Mientras se espera la respuesta, muestra un círculo de carga
-          if (snapshot.connectionState == ConnectionState.waiting) {
+          if (snapshot.connectionState == ConnectionState.waiting)
             return Center(child: CircularProgressIndicator());
-          } 
-          // Si hubo un error al cargar los datos
-          else if (snapshot.hasError) {
+          else if (snapshot.hasError)
             return Center(child: Text('Error: ${snapshot.error}'));
-          } 
-          // Si no hay usuarios en la base de datos
-          else if (!snapshot.hasData || snapshot.data!.isEmpty) {
+          else if (!snapshot.hasData || snapshot.data!.isEmpty)
             return Center(child: Text('No hay usuarios registrados'));
-          }
 
-          // Si todo está bien, muestra la lista de usuarios
           final usuarios = snapshot.data!;
 
           return ListView.builder(
-            itemCount: usuarios.length, // Número de usuarios
+            itemCount: usuarios.length,
             itemBuilder: (context, index) {
-              final u = usuarios[index]; // Usuario actual
+              final u = usuarios[index];
 
-              // Muestra los datos del usuario en una tarjeta
               return Card(
                 child: ListTile(
                   title: Text(u.nombre),
                   subtitle: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text("Dirección: ${u.direccion}"),
-                      Text("Teléfono: ${u.telefono}"),
                       Text("Correo: ${u.correo}"),
+                      Text("Teléfono: ${u.telefono}"),
                     ],
+                  ),
+                  trailing: PopupMenuButton<String>(
+                    onSelected: (value) {
+                      if (value == 'ver')
+                        mostrarDetalles(u);
+                      else if (value == 'editar')
+                        mostrarDialogoEditar(u);
+                      else if (value == 'eliminar')
+                        eliminarUsuario(u.id);
+                    },
+                    itemBuilder:
+                        (context) => [
+                          PopupMenuItem(value: 'ver', child: Text('Ver')),
+                          PopupMenuItem(value: 'editar', child: Text('Editar')),
+                          PopupMenuItem(
+                            value: 'eliminar',
+                            child: Text('Eliminar'),
+                          ),
+                        ],
                   ),
                 ),
               );
