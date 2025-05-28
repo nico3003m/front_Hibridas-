@@ -90,6 +90,8 @@ class ApiService {
     int id,
     Map<String, dynamic> cliente,
   ) async {
+    cliente['id'] = id; // <-- asegura que id coincide
+
     final response = await http.put(
       Uri.parse('$baseUrl/cliente/$id'),
       headers: {
@@ -99,7 +101,9 @@ class ApiService {
       body: jsonEncode(cliente),
     );
 
-    return response.statusCode == 204;
+    print('Actualizar cliente status: ${response.statusCode}');
+    print('Respuesta: ${response.body}');
+    return response.statusCode == 200 || response.statusCode == 204;
   }
 
   static Future<bool> eliminarCliente(int id) async {

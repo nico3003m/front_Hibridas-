@@ -99,10 +99,17 @@ class _RegisterUsuarioScreenState extends State<RegisterUsuarioScreen> {
                     controller: _passwordController,
                     decoration: InputDecoration(labelText: 'Contraseña'),
                     obscureText: true,
-                    validator:
-                        (value) =>
-                            value!.isEmpty ? 'Ingrese su contraseña' : null,
+                    validator: (value) {
+                      if (value == null || value.isEmpty) {
+                        return 'Ingrese su contraseña';
+                      }
+                      if (value.length < 8) {
+                        return 'La contraseña debe tener al menos 8 caracteres';
+                      }
+                      return null;
+                    },
                   ),
+
                   SizedBox(height: 10),
 
                   TextFormField(

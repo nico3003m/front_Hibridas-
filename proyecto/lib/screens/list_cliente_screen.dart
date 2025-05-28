@@ -13,19 +13,25 @@ class ListClienteScreen extends StatefulWidget {
 class _ListClienteScreenState extends State<ListClienteScreen> {
   List<Cliente> _clientes = [];
   bool _loading = true;
+  String? _nombreUsuario;
 
   @override
   void initState() {
     super.initState();
-    _cargarClientes();
+    _cargarDatosUsuarioYClientes();
+  }
+
+  Future<void> _cargarDatosUsuarioYClientes() async {
+    final prefs = await SharedPreferences.getInstance();
+    setState(() {
+      _nombreUsuario = prefs.getString('nombreUsuario');
+    });
+    await _cargarClientes();
   }
 
   Future<void> _cerrarSesion() async {
     final prefs = await SharedPreferences.getInstance();
-    await prefs
-        .clear(); // o prefs.remove('usuario') si guardas con clave específica
-
-    // Redirigir al login y evitar regresar a esta pantalla
+    await prefs.clear();
     Navigator.of(context).pushReplacementNamed('/login');
   }
 
@@ -65,7 +71,6 @@ class _ListClienteScreenState extends State<ListClienteScreen> {
   }
 
   void _mostrarFormulario([Cliente? clienteExistente]) async {
-    print("Si funciona el boton");
     final resultado = await showDialog<Cliente>(
       context: context,
       builder: (_) => _FormularioCliente(cliente: clienteExistente),
@@ -73,13 +78,12 @@ class _ListClienteScreenState extends State<ListClienteScreen> {
 
     if (resultado != null) {
       if (clienteExistente == null) {
-        await ApiService.crearCliente(
-          resultado.toJson(),
-        ); // ✅ AQUÍ SE HACE EL POST
+        await ApiService.crearCliente(resultado.toJson());
       } else {
+        print("Ingresa");
         await ApiService.actualizarCliente(resultado.id!, resultado.toJson());
       }
-      _cargarClientes(); // ✅ Se refresca la lista
+      _cargarClientes();
     }
   }
 
@@ -87,7 +91,7 @@ class _ListClienteScreenState extends State<ListClienteScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Clientes'),
+        title: Text('Lista de clientes'),
         actions: [
           IconButton(
             icon: Icon(Icons.logout),
@@ -122,28 +126,55 @@ class _ListClienteScreenState extends State<ListClienteScreen> {
       body:
           _loading
               ? Center(child: CircularProgressIndicator())
-              : ListView.builder(
-                itemCount: _clientes.length,
-                itemBuilder: (_, index) {
-                  final cliente = _clientes[index];
-                  return ListTile(
-                    title: Text(cliente.nombre),
-                    subtitle: Text(cliente.correo),
-                    trailing: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        IconButton(
-                          icon: Icon(Icons.edit, color: Colors.orange),
-                          onPressed: () => _mostrarFormulario(cliente),
-                        ),
-                        IconButton(
-                          icon: Icon(Icons.delete, color: Colors.red),
-                          onPressed: () => _eliminarCliente(cliente.id!),
-                        ),
-                      ],
+              : Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  SizedBox(height: 16),
+                  Center(
+                    child: Image.asset(
+                      'assets/compensar.png',
+                      height: 100, // ajusta el tamaño según lo necesites
                     ),
-                  );
-                },
+                  ),
+                  if (_nombreUsuario != null)
+                    Padding(
+                      padding: const EdgeInsets.all(16.0),
+                      child: Center(
+                        child: Text(
+                          'Bienvenido, $_nombreUsuario',
+                          style: TextStyle(
+                            fontSize: 18,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ),
+                    ),
+                  Expanded(
+                    child: ListView.builder(
+                      itemCount: _clientes.length,
+                      itemBuilder: (_, index) {
+                        final cliente = _clientes[index];
+                        return ListTile(
+                          title: Text(cliente.nombre),
+                          subtitle: Text(cliente.correo),
+                          trailing: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              IconButton(
+                                icon: Icon(Icons.edit, color: Colors.orange),
+                                onPressed: () => _mostrarFormulario(cliente),
+                              ),
+                              IconButton(
+                                icon: Icon(Icons.delete, color: Colors.red),
+                                onPressed: () => _eliminarCliente(cliente.id!),
+                              ),
+                            ],
+                          ),
+                        );
+                      },
+                    ),
+                  ),
+                ],
               ),
       floatingActionButton: FloatingActionButton(
         onPressed: () => _mostrarFormulario(),
